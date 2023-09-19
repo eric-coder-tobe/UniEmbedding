@@ -7,6 +7,7 @@ from recbole.data.dataset import SequentialDataset
 
 class UniSRecDataset(SequentialDataset):
     def __init__(self, config):
+        # 初始化时载入文本模态embedding
         super().__init__(config)
 
         self.plm_size = config['plm_size']
@@ -33,6 +34,7 @@ class UniSRecDataset(SequentialDataset):
 
 class PretrainUniSRecDataset(UniSRecDataset):
     def __init__(self, config):
+        # 增加了增强序列的text embedding载入
         super().__init__(config)
 
         self.plm_suffix_aug = config['plm_suffix_aug']
@@ -40,6 +42,7 @@ class PretrainUniSRecDataset(UniSRecDataset):
         self.plm_embedding_aug = self.weight2emb(plm_embedding_weight_aug)
 
     def load_plm_embedding(self, plm_suffix_aug=None):
+        # 增加了区分item_id在哪个domain的功能，item_id对应的domain存在self.iid2domain属性中
         with open(osp.join(self.config['data_path'], f'{self.dataset_name}.pt_datasets'), 'r') as file:
             dataset_names = file.read().strip().split(',')
         self.logger.info(f'Pre-training datasets: {dataset_names}')

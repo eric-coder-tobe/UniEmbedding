@@ -135,13 +135,17 @@ class UniSRec(SASRec):
 
     def pretrain(self, interaction):
         item_seq = interaction[self.ITEM_SEQ]
+        # print(f'itemseq.shape: {item_seq.shape}')
         item_seq_len = interaction[self.ITEM_SEQ_LEN]
+        # print(f'itemlenseq.shape: {item_seq_len.shape}')
         item_emb_list = self.moe_adaptor(interaction['item_emb_list'])
+        # print(f'itememblist.shape: {item_emb_list.shape}')
         seq_output = self.forward(item_seq, item_emb_list, item_seq_len)
         seq_output = F.normalize(seq_output, dim=1)
 
         # Remove sequences with the same next item
         pos_id = interaction['item_id']
+        print(f'pos_id.shape: {pos_id.shape}')
         same_pos_id = (pos_id.unsqueeze(1) == pos_id.unsqueeze(0))
         same_pos_id = torch.logical_xor(same_pos_id, torch.eye(pos_id.shape[0], dtype=torch.bool, device=pos_id.device))
 
@@ -156,8 +160,11 @@ class UniSRec(SASRec):
 
         # Loss for fine-tuning
         item_seq = interaction[self.ITEM_SEQ]
+        print(f'00itemseq.shape: {item_seq.shape}')
         item_seq_len = interaction[self.ITEM_SEQ_LEN]
+        print(f'itemlenseq.shape: {item_seq_len.shape}')
         item_emb_list = self.moe_adaptor(self.plm_embedding(item_seq))
+        print(f'itememblist.shape: {item_emb_list.shape}')
         seq_output = self.forward(item_seq, item_emb_list, item_seq_len)
         test_item_emb = self.moe_adaptor(self.plm_embedding.weight)
         if self.train_stage == 'transductive_ft':
@@ -168,6 +175,7 @@ class UniSRec(SASRec):
 
         logits = torch.matmul(seq_output, test_item_emb.transpose(0, 1)) / self.temperature
         pos_items = interaction[self.POS_ITEM_ID]
+        print(f'pos_id.shape: {pos_items.shape}')
         loss = self.loss_fct(logits, pos_items)
         return loss
 
